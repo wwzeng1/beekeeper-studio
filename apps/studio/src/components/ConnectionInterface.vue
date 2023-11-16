@@ -366,6 +366,72 @@ export default Vue.extend({
       try {
         this.testing = true
         this.connectionError = null
+        const server = createServer(this.config)
+        await this.$store.dispatch('test', this.config)
+        this.$noty.success("Connection looks good!")
+        return true
+      } catch (ex) {
+        if (ex instanceof Error && ex.message.includes('SSH')) {
+          this.connectionError = 'SSH Error: ' + ex.message
+        } else {
+          this.connectionError = 'Database Error: ' + ex.message
+        }
+        this.$noty.error("Error establishing a connection")
+      } finally {
+        this.testing = false
+      }
+    },
+    async save() {
+      try {
+        this.errors = null
+        this.connectionError = null
+        if (!this.config.name) {
+          throw new Error("Name is required")
+        }
+        await this.$store.dispatch('data/connections/save', this.config)
+        this.$noty.success("Connection Saved")
+      } catch (ex) {
+        console.error(ex)
+        this.errors = [ex.message]
+        this.$noty.error("Could not save connection information")
+      }
+    },
+    handleErrorMessage(message) {
+      if (message) {
+        this.errors = [message]
+        this.$noty.error("Could not parse connection URL.")
+      } else {
+        this.errors = null
+      }
+    }
+  },
+})
+</script>
+
+<style></style>
+      this.connectionError = null
+      try {
+        const server = createServer(this.config)
+        await this.$store.dispatch('connect', this.config)
+      } catch (ex) {
+        if (ex instanceof Error && ex.message.includes('SSH')) {
+          this.connectionError = 'SSH Error: ' + ex.message
+        } else {
+          this.connectionError = 'Database Error: ' + ex.message
+        }
+        this.$noty.error("Error establishing a connection")
+        log.error(ex)
+      }
+    },
+    async handleConnect(config) {
+      this.config = config
+      await this.submit()
+    },
+    async testConnection() {
+
+      try {
+        this.testing = true
+        this.connectionError = null
         await this.$store.dispatch('test', this.config)
         this.$noty.success("Connection looks good!")
         return true
